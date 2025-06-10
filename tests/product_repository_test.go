@@ -1,24 +1,15 @@
-package product
+package tests
 
 import (
 	"context"
 	"fmt"
-	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/require"
 	"log"
-	"os"
 	"querybuilder/internal/config"
-	"querybuilder/internal/storage"
+	"querybuilder/internal/database"
+	"querybuilder/internal/product"
 	"testing"
 )
-
-func TestMain(m *testing.M) {
-	// Загрузим .env перед всеми тестами
-	if err := godotenv.Load("../../.env"); err != nil {
-		log.Println(".env not found or failed to load")
-	}
-	os.Exit(m.Run())
-}
 
 func TestGetAllProducts(t *testing.T) {
 	ctx := context.Background()
@@ -26,12 +17,12 @@ func TestGetAllProducts(t *testing.T) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	db, err := storage.NewMssqlStorage(cnf.DB)
+	db, err := database.NewMssqlStorage(cnf.DB)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
-	store := NewStore(db)
+	store := product.NewStore(db)
 	products, err := store.GetAllProducts(ctx)
 	if err != nil {
 		log.Fatal(err)

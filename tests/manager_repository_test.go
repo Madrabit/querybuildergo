@@ -1,24 +1,16 @@
-package manager
+package tests
 
 import (
 	"context"
 	"fmt"
-	"github.com/joho/godotenv"
+	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/require"
 	"log"
-	"os"
 	"querybuilder/internal/config"
-	"querybuilder/internal/storage"
+	"querybuilder/internal/database"
+	"querybuilder/internal/manager"
 	"testing"
 )
-
-func TestMain(m *testing.M) {
-	// Загрузим .env перед всеми тестами
-	if err := godotenv.Load("../../.env"); err != nil {
-		log.Println(".env not found or failed to load")
-	}
-	os.Exit(m.Run())
-}
 
 func TestGetDailyReport(t *testing.T) {
 	ctx := context.Background()
@@ -26,12 +18,17 @@ func TestGetDailyReport(t *testing.T) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	db, err := storage.NewMssqlStorage(cnf.DB)
+	db, err := database.NewMssqlStorage(cnf.DB)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer db.Close()
-	store := NewStore(db)
+	defer func(db *sqlx.DB) {
+		err := db.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}(db)
+	store := manager.NewStore(db)
 	report, err := store.GetDailyReport(ctx, "Бартенева", "2024-11-08", "2024-11-09")
 	if err != nil {
 		log.Fatal(err)

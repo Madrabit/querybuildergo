@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"log"
 	"querybuilder/internal/config"
-	"querybuilder/internal/storage"
+	"querybuilder/internal/database"
 	"testing"
 )
 
@@ -16,14 +16,14 @@ func TestCreateExl(t *testing.T) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	db, err := storage.NewMssqlStorage(cnf.DB)
+	db, err := database.NewMssqlStorage(cnf.DB)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
 	store := NewStore(db)
 	products := []string{"IRB-моделирование для профессионалов"}
-	empl, err := store.findByProducts(ctx, products)
+	empl, err := store.FindByProducts(ctx, products)
 	if err != nil {
 		log.Fatal(err)
 	}

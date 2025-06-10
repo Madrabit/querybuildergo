@@ -8,10 +8,3 @@ func StringOrEmpty(s sql.NullString) string {
 	}
 	return ""
 }
-
-func TimeOrEmpty(t sql.NullTime, layout string) string {
-	if t.Valid {
-		return t.Time.Format(layout)
-	}
-	return ""
-}

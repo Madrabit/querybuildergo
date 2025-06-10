@@ -7,15 +7,15 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type Store struct {
+type Repository struct {
 	db *sqlx.DB
 }
 
-func NewStore(db *sqlx.DB) *Store {
-	return &Store{db: db}
+func NewStore(db *sqlx.DB) *Repository {
+	return &Repository{db: db}
 }
 
-func (s *Store) GetDailyReport(ctx context.Context, manager, startDate, endDate string) ([]CallReport, error) {
+func (s *Repository) GetDailyReport(ctx context.Context, manager, startDate, endDate string) ([]CallReport, error) {
 	tx, err := s.db.BeginTxx(ctx, nil)
 	if err != nil {
 		return nil, err

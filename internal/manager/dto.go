@@ -1,6 +1,8 @@
 package manager
 
-import "database/sql"
+import (
+	"database/sql"
+)
 
 type CallReport struct {
 	FullName      sql.NullString

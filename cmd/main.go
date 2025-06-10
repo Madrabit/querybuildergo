@@ -4,14 +4,15 @@ import (
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
+	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
 	"log"
 	"net/http"
 	"querybuilder/internal/config"
-	"querybuilder/internal/storage"
-	"querybuilder/services/employee"
-	"querybuilder/services/manager"
-	"querybuilder/services/product"
+	"querybuilder/internal/database"
+	employee2 "querybuilder/internal/employee"
+	manager2 "querybuilder/internal/manager"
+	product2 "querybuilder/internal/product"
 )
 
 func main() {
@@ -23,19 +24,24 @@ func main() {
 		fmt.Println(err)
 	}
 
-	db, err := storage.NewMssqlStorage(cnf.DB)
+	db, err := database.NewMssqlStorage(cnf.DB)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer db.Close()
-	storeProd := product.NewStore(db)
-	handlerProd := product.NewHandler(storeProd)
+	defer func(db *sqlx.DB) {
+		err := db.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}(db)
+	storeProd := product2.NewStore(db)
+	handlerProd := product2.NewHandler(storeProd)
 
-	storeManager := manager.NewStore(db)
-	handlerManager := manager.NewHandler(storeManager)
+	storeManager := manager2.NewStore(db)
+	handlerManager := manager2.NewHandler(storeManager)
 
-	storeEmp := employee.NewStore(db)
-	handlerEmp := employee.NewHandler(storeEmp)
+	storeEmp := employee2.NewStore(db)
+	handlerEmp := employee2.NewHandler(storeEmp)
 
 	r := chi.NewRouter()
 	r.Use(cors.Handler(cors.Options{
@@ -56,13 +62,13 @@ func main() {
 		MaxAge:           3600,
 	}))
 	r.Route("/products", func(r chi.Router) {
-		r.Mount("/", product.Routes(handlerProd))
+		r.Mount("/", product2.Routes(handlerProd))
 	})
 	r.Route("/manager", func(r chi.Router) {
-		r.Mount("/", manager.Routes(handlerManager))
+		r.Mount("/", manager2.Routes(handlerManager))
 	})
 	r.Route("/employee", func(r chi.Router) {
-		r.Mount("/", employee.Routes(handlerEmp))
+		r.Mount("/", employee2.Routes(handlerEmp))
 	})
 	log.Fatal(http.ListenAndServe(":8080", r))
 

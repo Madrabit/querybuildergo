@@ -5,18 +5,17 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/jmoiron/sqlx"
-	"querybuilder/types"
 )
 
-type Store struct {
+type Repository struct {
 	db *sqlx.DB
 }
 
-func NewStore(db *sqlx.DB) *Store {
-	return &Store{db: db}
+func NewStore(db *sqlx.DB) *Repository {
+	return &Repository{db: db}
 }
 
-func (s *Store) GetAllProducts(ctx context.Context) ([]*types.Product, error) {
+func (s *Repository) GetAllProducts(ctx context.Context) ([]*Entity, error) {
 	conn, err := s.db.Conn(ctx)
 	if err != nil {
 		return nil, err
@@ -31,7 +30,7 @@ func (s *Store) GetAllProducts(ctx context.Context) ([]*types.Product, error) {
 		return nil, fmt.Errorf("select Products error %v", err)
 	}
 	defer rows.Close()
-	products := make([]*types.Product, 0)
+	products := make([]*Entity, 0)
 	for rows.Next() {
 		pr, err := scanRowIntoProduct(rows)
 		if err != nil {
@@ -47,8 +46,8 @@ func (s *Store) GetAllProducts(ctx context.Context) ([]*types.Product, error) {
 
 }
 
-func scanRowIntoProduct(rows *sql.Rows) (*types.Product, error) {
-	prod := new(types.Product)
+func scanRowIntoProduct(rows *sql.Rows) (*Entity, error) {
+	prod := new(Entity)
 	err := rows.Scan(
 		&prod.Name,
 	)

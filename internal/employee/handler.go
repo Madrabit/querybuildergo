@@ -22,7 +22,7 @@ func (h *Handler) getFileByProducts(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	products, err := h.store.findByProducts(r.Context(), prodReq.Products)
+	products, err := h.store.FindByProducts(r.Context(), prodReq.Products)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return

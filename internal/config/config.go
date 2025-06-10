@@ -22,35 +22,35 @@ type ServerConfig struct {
 	Port    int    `envconfig:"PORT" required:"true"`
 }
 
-func Load() (*Config, error) {
+func Load() (Config, error) {
 	var cfg Config
 	if db, err := LoadDbConfig(); err != nil {
-		return nil, err
+		return Config{}, err
 	} else {
-		cfg.DB = *db
+		cfg.DB = db
 	}
 	if server, err := LoadServerConfig(); err != nil {
-		return nil, err
+		return Config{}, err
 	} else {
-		cfg.Server = *server
+		cfg.Server = server
 	}
-	return &cfg, nil
+	return cfg, nil
 }
 
-func LoadDbConfig() (*DBConfig, error) {
+func LoadDbConfig() (DBConfig, error) {
 	var cfg DBConfig
 	err := envconfig.Process("DB", &cfg)
 	if err != nil {
-		return nil, err
+		return DBConfig{}, err
 	}
-	return &cfg, nil
+	return cfg, nil
 }
 
-func LoadServerConfig() (*ServerConfig, error) {
+func LoadServerConfig() (ServerConfig, error) {
 	var cfg ServerConfig
 	err := envconfig.Process("SERVER", &cfg)
 	if err != nil {
-		return nil, err
+		return ServerConfig{}, err
 	}
-	return &cfg, nil
+	return cfg, nil
 }

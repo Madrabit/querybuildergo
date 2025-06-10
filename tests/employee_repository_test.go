@@ -1,24 +1,16 @@
-package employee
+package tests
 
 import (
 	"context"
 	"fmt"
-	"github.com/joho/godotenv"
+	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/require"
 	"log"
-	"os"
 	"querybuilder/internal/config"
-	"querybuilder/internal/storage"
+	"querybuilder/internal/database"
+	"querybuilder/internal/employee"
 	"testing"
 )
-
-func TestMain(m *testing.M) {
-	// Загрузим .env перед всеми тестами
-	if err := godotenv.Load("../../.env"); err != nil {
-		log.Println(".env not found or failed to load")
-	}
-	os.Exit(m.Run())
-}
 
 func TestGetEmplByProducts(t *testing.T) {
 	ctx := context.Background()
@@ -26,14 +18,19 @@ func TestGetEmplByProducts(t *testing.T) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	db, err := storage.NewMssqlStorage(cnf.DB)
+	db, err := database.NewMssqlStorage(cnf.DB)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer db.Close()
-	store := NewStore(db)
+	defer func(db *sqlx.DB) {
+		err := db.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}(db)
+	store := employee.NewStore(db)
 	products := []string{"IRB-моделирование для профессионалов"}
-	empl, err := store.findByProducts(ctx, products)
+	empl, err := store.FindByProducts(ctx, products)
 	if err != nil {
 		log.Fatal(err)
 	}

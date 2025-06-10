@@ -15,7 +15,7 @@ func NewStore(db *sqlx.DB) *Store {
 	return &Store{db: db}
 }
 
-func (s *Store) findByProducts(ctx context.Context, products []string) ([]EmployeeDTOResp, error) {
+func (s *Store) FindByProducts(ctx context.Context, products []string) ([]EmployeeDTOResp, error) {
 	tx, err := s.db.BeginTxx(ctx, nil)
 	if err != nil {
 		return nil, err
