@@ -2,6 +2,7 @@ package employee
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"os"
 	filepath "path/filepath"
@@ -27,7 +28,10 @@ func (h *Handler) getFileByProducts(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	CreateExl(products)
+	err = CreateExl(products)
+	if err != nil {
+		return
+	}
 	rootDir, err := os.Getwd()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -40,7 +44,12 @@ func (h *Handler) getFileByProducts(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "file not found", http.StatusNotFound)
 		return
 	}
-	defer f.Close()
+	defer func(f *os.File) {
+		err := f.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}(f)
 	fileName := filepath.Base(filePath)
 	w.Header().Set("Content-Disposition", "attachment; filename=\""+fileName+"\"")
 	w.Header().Set("Content-Type", "application/octet-stream")

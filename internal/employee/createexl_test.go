@@ -3,6 +3,7 @@ package employee
 import (
 	"context"
 	"fmt"
+	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/require"
 	"log"
 	"querybuilder/internal/config"
@@ -20,7 +21,12 @@ func TestCreateExl(t *testing.T) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer db.Close()
+	defer func(db *sqlx.DB) {
+		err := db.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}(db)
 	store := NewStore(db)
 	products := []string{"IRB-моделирование для профессионалов"}
 	empl, err := store.FindByProducts(ctx, products)
@@ -28,5 +34,8 @@ func TestCreateExl(t *testing.T) {
 		log.Fatal(err)
 	}
 	require.Greater(t, len(empl), 0)
-	CreateExl(empl)
+	err = CreateExl(empl)
+	if err != nil {
+		err.Error()
+	}
 }
