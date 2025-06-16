@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/jmoiron/sqlx"
+	"log"
 )
 
 type Repository struct {
@@ -20,7 +21,12 @@ func (s *Repository) GetAllProducts(ctx context.Context) ([]*Entity, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer conn.Close()
+	defer func(conn *sql.Conn) {
+		err := conn.Close()
+		if err != nil {
+			log.Printf("product repository: failed to close database connection: %v", err)
+		}
+	}(conn)
 	_, err = conn.ExecContext(ctx, "set ansi_nulls off\n")
 	if err != nil {
 		return nil, err
@@ -29,7 +35,12 @@ func (s *Repository) GetAllProducts(ctx context.Context) ([]*Entity, error) {
 	if err != nil {
 		return nil, fmt.Errorf("select Products error %v", err)
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			log.Printf("product repository: failed to close row: %v", err)
+		}
+	}()
 	products := make([]*Entity, 0)
 	for rows.Next() {
 		pr, err := scanRowIntoProduct(rows)
@@ -38,7 +49,10 @@ func (s *Repository) GetAllProducts(ctx context.Context) ([]*Entity, error) {
 		}
 		products = append(products, pr)
 	}
-	rows.Close()
+	err = rows.Close()
+	if err != nil {
+		return nil, err
+	}
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("error scanning rows %v", err)
 	}
