@@ -57,20 +57,24 @@ func CreateExl(empls []EmployeeDTOResp) error {
 	}
 	for i, empl := range cleanEmp {
 		row := i + 2
-		err := f.SetCellValue("Sheet1", cell(1, row), empl.ProductName)
-		err = f.SetCellValue("Sheet1", cell(2, row), empl.ShortBankName)
-		err = f.SetCellValue("Sheet1", cell(3, row), empl.FullBankName)
-		err = f.SetCellValue("Sheet1", cell(4, row), empl.LastName)
-		err = f.SetCellValue("Sheet1", cell(5, row), empl.Name)
-		err = f.SetCellValue("Sheet1", cell(6, row), empl.Patronymic)
-		err = f.SetCellValue("Sheet1", cell(7, row), empl.JobTitle)
-		err = f.SetCellValue("Sheet1", cell(8, row), empl.Email)
-		err = f.SetCellValue("Sheet1", cell(9, row), empl.ContactDate)
-		err = f.SetCellValue("Sheet1", cell(10, row), empl.Phone)
-		err = f.SetCellValue("Sheet1", cell(11, row), empl.ExtensionPhone)
-		err = f.SetCellValue("Sheet1", cell(12, row), empl.Mobile)
-		if err != nil {
-			return err
+		values := []any{
+			empl.ProductName,
+			empl.ShortBankName,
+			empl.FullBankName,
+			empl.LastName,
+			empl.Name,
+			empl.Patronymic,
+			empl.JobTitle,
+			empl.Email,
+			empl.ContactDate,
+			empl.Phone,
+			empl.ExtensionPhone,
+			empl.Mobile,
+		}
+		for idx, value := range values {
+			if err := f.SetCellValue("Sheet1", cell(idx+1, row), value); err != nil {
+				return err
+			}
 		}
 	}
 	f.SetActiveSheet(index)
@@ -79,12 +83,13 @@ func CreateExl(empls []EmployeeDTOResp) error {
 	if err := f.SaveAs(finFile); err != nil {
 		return err
 	}
+	return nil
 }
 
 func cell(col, row int) string {
 	name, err := excelize.CoordinatesToCellName(col, row)
 	if err != nil {
-		return err
+		return ""
 	}
 	return name
 }

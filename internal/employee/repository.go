@@ -79,13 +79,13 @@ func (s *Store) FindByProducts(ctx context.Context, products []string) ([]Employ
 	for rows.Next() {
 		e, err := scanRowIntoProduct(rows)
 		if err != nil {
-			return nil, fmt.Errorf("Error scanning row %v", err)
+			return nil, fmt.Errorf("error scanning row %v", err)
 		}
 		empl = append(empl, e)
 	}
 	rows.Close()
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("Error scanning rows %v", err)
+		return nil, fmt.Errorf("error scanning rows %v", err)
 	}
 	if err := tx.Commit(); err != nil {
 		return nil, err

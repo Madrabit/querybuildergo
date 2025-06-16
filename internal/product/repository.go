@@ -34,13 +34,13 @@ func (s *Repository) GetAllProducts(ctx context.Context) ([]*Entity, error) {
 	for rows.Next() {
 		pr, err := scanRowIntoProduct(rows)
 		if err != nil {
-			return nil, fmt.Errorf("Error scanning row %v", err)
+			return nil, fmt.Errorf("error scanning row %v", err)
 		}
 		products = append(products, pr)
 	}
 	rows.Close()
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("Error scanning rows %v", err)
+		return nil, fmt.Errorf("error scanning rows %v", err)
 	}
 	return products, nil
 

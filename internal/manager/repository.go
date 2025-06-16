@@ -53,13 +53,13 @@ func (s *Repository) GetDailyReport(ctx context.Context, manager, startDate, end
 	for rows.Next() {
 		r, err := scanRowIntoProduct(rows)
 		if err != nil {
-			return nil, fmt.Errorf("Error scanning row %v", err)
+			return nil, fmt.Errorf("error scanning row %v", err)
 		}
 		callReport = append(callReport, r)
 	}
 	rows.Close()
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("Error scanning rows %v", err)
+		return nil, fmt.Errorf("error scanning rows %v", err)
 	}
 	if err := tx.Commit(); err != nil {
 		return nil, err
