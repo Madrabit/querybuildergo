@@ -1,4 +1,4 @@
-package employee
+package tests
 
 import (
 	"context"
@@ -8,6 +8,7 @@ import (
 	"log"
 	"querybuilder/internal/config"
 	"querybuilder/internal/database"
+	"querybuilder/internal/employee"
 	"testing"
 )
 
@@ -27,13 +28,13 @@ func TestCreateExl(t *testing.T) {
 			log.Fatal(err)
 		}
 	}(db)
-	store := NewStore(db)
+	store := employee.NewStore(db)
 	products := []string{"IRB-моделирование для профессионалов"}
 	empl, err := store.FindByProducts(ctx, products)
 	if err != nil {
 		log.Fatal(err)
 	}
 	require.Greater(t, len(empl), 0)
-	err = CreateExl(empl)
+	err = employee.CreateExl(empl)
 	require.NoError(t, err)
 }

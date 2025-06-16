@@ -1,7 +1,8 @@
-package config
+package tests
 
 import (
 	"github.com/stretchr/testify/assert"
+	"querybuilder/internal/config"
 	"testing"
 )
 
@@ -14,7 +15,7 @@ func TestGetConfig(t *testing.T) {
 		t.Setenv("DB_PASS", "hf,jnfflvbyf")
 		t.Setenv("SERVER_ADDRESS", "localhost")
 		t.Setenv("SERVER_PORT", "8080")
-		cnf, err := Load()
+		cnf, err := config.Load()
 		assert.NoError(t, err)
 		assert.Equal(t, "ibd_renew1", cnf.DB.Database)
 	})
@@ -27,9 +28,9 @@ func TestGetConfig(t *testing.T) {
 		t.Setenv("DB_PASS", "")
 		t.Setenv("SERVER_ADDRESS", "")
 		t.Setenv("SERVER_PORT", "0")
-		cnf, err := Load()
+		cnf, err := config.Load()
 		assert.NoError(t, err)
-		assert.Equal(t, Config{}, cnf)
+		assert.Equal(t, config.Config{}, cnf)
 		assert.Empty(t, cnf.DB.Database)
 	})
 }
