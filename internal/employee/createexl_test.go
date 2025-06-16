@@ -35,7 +35,5 @@ func TestCreateExl(t *testing.T) {
 	}
 	require.Greater(t, len(empl), 0)
 	err = CreateExl(empl)
-	if err != nil {
-		err.Error()
-	}
+	require.NoError(t, err)
 }
