@@ -27,7 +27,8 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v6
         with:
-          args: --timeout=15m
+          version: v1.64.8
+          args: --timeout=5m --out-format=colored-line-number --verbose
 
   yamllint:
     name: runner / yamllint
