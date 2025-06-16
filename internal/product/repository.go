@@ -35,12 +35,12 @@ func (s *Repository) GetAllProducts(ctx context.Context) ([]*Entity, error) {
 	if err != nil {
 		return nil, fmt.Errorf("select Products error %v", err)
 	}
-	defer func(rows *sql.Rows) {
+	defer func() {
 		err := rows.Close()
 		if err != nil {
-
+			log.Printf("product repository: failed to close row: %v", err)
 		}
-	}(rows)
+	}()
 	products := make([]*Entity, 0)
 	for rows.Next() {
 		pr, err := scanRowIntoProduct(rows)
