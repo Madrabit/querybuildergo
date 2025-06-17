@@ -10,7 +10,7 @@ type Entity struct {
 	Name sql.NullString
 }
 
-func ToResponse(entities []*Entity) Response {
+func ToResponse(entities []Entity) Response {
 	names := make([]string, 0, len(entities))
 	for _, entity := range entities {
 		if entity.Name.Valid {

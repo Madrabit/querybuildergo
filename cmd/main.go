@@ -11,10 +11,10 @@ import (
 	"querybuilder/internal/config"
 	"querybuilder/internal/database"
 	employee2 "querybuilder/internal/employee"
-	manager2 "querybuilder/internal/manager"
-	product2 "querybuilder/internal/product"
+	"querybuilder/internal/product"
 )
 
+//goland:noinspection HttpUrlsUsage,HttpUrlsUsage
 func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Fatal("Error loading .env file")
@@ -34,11 +34,12 @@ func main() {
 			log.Fatal(err)
 		}
 	}(db)
-	storeProd := product2.NewStore(db)
-	handlerProd := product2.NewHandler(storeProd)
+	repProduct := product.NewStore(db)
+	svcProd := product.NewService(repProduct)
+	handlerProd := product.NewHandler(svcProd)
 
-	storeManager := manager2.NewStore(db)
-	handlerManager := manager2.NewHandler(storeManager)
+	//storeManager := NewStore(db)
+	//handlerManager := NewHandler(storeManager)
 
 	storeEmp := employee2.NewStore(db)
 	handlerEmp := employee2.NewHandler(storeEmp)
@@ -62,11 +63,11 @@ func main() {
 		MaxAge:           3600,
 	}))
 	r.Route("/products", func(r chi.Router) {
-		r.Mount("/", product2.Routes(handlerProd))
+		r.Mount("/", product.Routes(handlerProd))
 	})
-	r.Route("/manager", func(r chi.Router) {
-		r.Mount("/", manager2.Routes(handlerManager))
-	})
+	//r.Route("/manager", func(r chi.Router) {
+	//	r.Mount("/", manager2.Routes(handlerManager))
+	//})
 	r.Route("/employee", func(r chi.Router) {
 		r.Mount("/", employee2.Routes(handlerEmp))
 	})

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/jmoiron/sqlx"
+	"log"
 )
 
 type Store struct {
@@ -27,10 +28,6 @@ func (s *Store) FindByProducts(ctx context.Context, products []string) ([]Employ
 	if err != nil {
 		return nil, err
 	}
-	if len(products) == 0 {
-		return nil, nil
-	}
-	//TODO если привязать к бд, бд не поломается?
 	query, args, err := sqlx.In(` 
 		SELECT 
 	P794 as productName,
@@ -72,9 +69,14 @@ func (s *Store) FindByProducts(ctx context.Context, products []string) ([]Employ
 	query = tx.Rebind(query)
 	rows, err := tx.QueryContext(ctx, query, args...)
 	if err != nil {
-		return nil, fmt.Errorf("select Products error %v", err)
+		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			log.Println(err)
+		}
+	}()
 	empl := make([]EmployeeDTOResp, 0)
 	for rows.Next() {
 		e, err := scanRowIntoProduct(rows)
@@ -83,9 +85,14 @@ func (s *Store) FindByProducts(ctx context.Context, products []string) ([]Employ
 		}
 		empl = append(empl, e)
 	}
-	rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			log.Println(err)
+		}
+	}()
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("error scanning rows %v", err)
+		return nil, err
 	}
 	if err := tx.Commit(); err != nil {
 		return nil, err

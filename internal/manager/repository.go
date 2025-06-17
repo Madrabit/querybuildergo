@@ -3,8 +3,8 @@ package manager
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"github.com/jmoiron/sqlx"
+	"log"
 )
 
 type Repository struct {
@@ -39,27 +39,34 @@ func (s *Repository) GetDailyReport(ctx context.Context, manager, startDate, end
 			OR (c.Date_cr > ?  AND c.Date_cr  < ?))
 			AND b.P37 Like ?
 		ORDER BY c.Date_mod`
-	if err != nil {
-		return nil, err
-	}
 	args := []interface{}{startDate, endDate, startDate, endDate, "%" + manager + "%"}
 	query = tx.Rebind(query)
 	rows, err := tx.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			log.Printf("manager repository: fail close rows: %v", err)
+		}
+	}()
 	callReport := make([]CallReport, 0)
 	for rows.Next() {
 		r, err := scanRowIntoProduct(rows)
 		if err != nil {
-			return nil, fmt.Errorf("error scanning row %v", err)
+			return nil, err
 		}
 		callReport = append(callReport, r)
 	}
-	rows.Close()
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			log.Printf("manager repository: fail close rows: %v", err)
+		}
+	}()
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("error scanning rows %v", err)
+		return nil, err
 	}
 	if err := tx.Commit(); err != nil {
 		return nil, err
