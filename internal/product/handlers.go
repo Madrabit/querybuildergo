@@ -18,7 +18,7 @@ func NewHandler(svc Svc) *Handler {
 	return &Handler{svc: svc}
 }
 
-func (h *Handler) GetProducts(w http.ResponseWriter) {
+func (h *Handler) GetProducts(w http.ResponseWriter, _ *http.Request) {
 	products, err := h.svc.GetAllProducts()
 	var nfErr *common.NotFoundError
 	if err != nil {
