@@ -1,7 +1,6 @@
 package tests
 
 import (
-	"context"
 	"fmt"
 	"github.com/stretchr/testify/require"
 	"log"
@@ -12,18 +11,19 @@ import (
 )
 
 func TestGetAllProducts(t *testing.T) {
-	ctx := context.Background()
 	cnf, err := config.Load()
-	if err != nil {
-		fmt.Println(err)
-	}
+	require.NoError(t, err)
+
 	db, err := database.NewMssqlStorage(cnf.DB)
-	if err != nil {
-		log.Fatal(err)
-	}
+	require.NoError(t, err)
 	defer db.Close()
+	// Начинаем транзакцию
+
+	require.NoError(t, err)
+	// Откатим транзакцию в конце, чтобы не оставлять изменения
 	store := product.NewStore(db)
-	products, err := store.GetAllProducts(ctx)
+	tx, err := store.BeginTransaction()
+	products, err := store.GetAllProductsTx(tx)
 	if err != nil {
 		log.Fatal(err)
 	}

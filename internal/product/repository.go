@@ -1,11 +1,7 @@
 package product
 
 import (
-	"context"
-	"database/sql"
-	"fmt"
 	"github.com/jmoiron/sqlx"
-	"log"
 )
 
 type Repository struct {
@@ -16,57 +12,23 @@ func NewStore(db *sqlx.DB) *Repository {
 	return &Repository{db: db}
 }
 
-func (s *Repository) GetAllProducts(ctx context.Context) ([]*Entity, error) {
-	conn, err := s.db.Conn(ctx)
-	if err != nil {
-		return nil, err
-	}
-	defer func(conn *sql.Conn) {
-		err := conn.Close()
-		if err != nil {
-			log.Printf("product repository: failed to close database connection: %v", err)
-		}
-	}(conn)
-	_, err = conn.ExecContext(ctx, "set ansi_nulls off\n")
-	if err != nil {
-		return nil, err
-	}
-	rows, err := conn.QueryContext(ctx, "SELECT DISTINCT P794 as productName FROM dbo.Attr143 ORDER BY P794 ASC")
-	if err != nil {
-		return nil, fmt.Errorf("select Products error %v", err)
-	}
-	defer func() {
-		err := rows.Close()
-		if err != nil {
-			log.Printf("product repository: failed to close row: %v", err)
-		}
-	}()
-	products := make([]*Entity, 0)
-	for rows.Next() {
-		pr, err := scanRowIntoProduct(rows)
-		if err != nil {
-			return nil, fmt.Errorf("error scanning row %v", err)
-		}
-		products = append(products, pr)
-	}
-	err = rows.Close()
-	if err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("error scanning rows %v", err)
-	}
-	return products, nil
-
+func (r *Repository) BeginTransaction() (tx *sqlx.Tx, err error) {
+	return r.db.Beginx()
 }
 
-func scanRowIntoProduct(rows *sql.Rows) (*Entity, error) {
-	prod := new(Entity)
-	err := rows.Scan(
-		&prod.Name,
-	)
+func (r *Repository) SetAnsiNullsOffTx(tx *sqlx.Tx) error {
+	_, err := tx.Exec("set ansi_nulls off\n")
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *Repository) GetAllProductsTx(tx *sqlx.Tx) ([]Entity, error) {
+	var entities []Entity
+	err := tx.Select(&entities, "SELECT DISTINCT P794 as name FROM dbo.Attr143 ORDER BY P794 ASC")
 	if err != nil {
 		return nil, err
 	}
-	return prod, nil
+	return entities, nil
 }

@@ -1,27 +1,33 @@
 package product
 
 import (
-	"encoding/json"
+	"errors"
 	"net/http"
+	"querybuilder/internal/common"
 )
 
 type Handler struct {
-	store *Repository
+	svc Svc
 }
 
-func NewHandler(store *Repository) *Handler {
-	return &Handler{store: store}
+type Svc interface {
+	GetAllProducts() (products Response, err error)
 }
 
-func (h *Handler) GetProducts(w http.ResponseWriter, req *http.Request) {
-	products, err := h.store.GetAllProducts(req.Context())
-	response := ToResponse(products)
+func NewHandler(svc Svc) *Handler {
+	return &Handler{svc: svc}
+}
+
+func (h *Handler) GetProducts(w http.ResponseWriter) {
+	products, err := h.svc.GetAllProducts()
+	var nfErr *common.NotFoundError
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		if errors.As(err, &nfErr) {
+			common.ErrResponse(w, http.StatusOK, err.Error())
+			return
+		}
+		common.ErrResponse(w, http.StatusInternalServerError, err.Error())
+		return
 	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
+	common.OkResponse(w, products)
 }
