@@ -1,9 +1,7 @@
 package tests
 
 import (
-	"context"
 	"fmt"
-	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/require"
 	"log"
 	"querybuilder/internal/config"
@@ -13,24 +11,21 @@ import (
 )
 
 func TestGetEmplByProducts(t *testing.T) {
-	ctx := context.Background()
 	cnf, err := config.Load()
-	if err != nil {
-		fmt.Println(err)
-	}
+	require.NoError(t, err)
 	db, err := database.NewMssqlStorage(cnf.DB)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer func(db *sqlx.DB) {
+	require.NoError(t, err)
+	defer func() {
 		err := db.Close()
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal("error closing db")
 		}
-	}(db)
+	}()
 	store := employee.NewStore(db)
+	tx, err := store.BeginTransaction()
+	require.NoError(t, err)
 	products := []string{"IRB-моделирование для профессионалов"}
-	empl, err := store.FindByProducts(ctx, products)
+	empl, err := store.FindByProducts(tx, products)
 	if err != nil {
 		log.Fatal(err)
 	}

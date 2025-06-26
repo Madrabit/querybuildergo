@@ -19,7 +19,7 @@ func GetProjectRoot() string {
 	return projectRoot
 }
 
-func CreateExl(empls []EmployeeDTOResp) error {
+func CreateExl(empls []Entity) error {
 	filename := "./downloads/emp.xlsx"
 	f, err := excelize.OpenFile(filename)
 	if err != nil {

@@ -1,9 +1,7 @@
 package tests
 
 import (
-	"context"
 	"fmt"
-	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/require"
 	"log"
 	"querybuilder/internal/config"
@@ -13,26 +11,21 @@ import (
 )
 
 func TestGetDailyReport(t *testing.T) {
-	ctx := context.Background()
 	cnf, err := config.Load()
-	if err != nil {
-		fmt.Println(err)
-	}
+	require.NoError(t, err)
 	db, err := database.NewMssqlStorage(cnf.DB)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer func(db *sqlx.DB) {
+	require.NoError(t, err)
+	defer func() {
 		err := db.Close()
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal("error closing db")
 		}
-	}(db)
+	}()
 	store := manager.NewStore(db)
-	report, err := store.GetDailyReport(ctx, "Бартенева", "2024-11-08", "2024-11-09")
-	if err != nil {
-		log.Fatal(err)
-	}
+	tx, err := store.BeginTransaction()
+	require.NoError(t, err)
+	report, err := store.GetDailyReport(tx, "Бартенева", "2024-11-08", "2024-11-09")
+	require.NoError(t, err)
 	require.Greater(t, len(report), 0)
 	for _, r := range report {
 		fmt.Println(r)

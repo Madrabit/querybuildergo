@@ -4,12 +4,12 @@ import (
 	"database/sql"
 )
 
-type CallReport struct {
-	FullName      sql.NullString
-	Dep           sql.NullString
-	Bank          sql.NullString
-	Comment       sql.NullString
-	CommentSecond sql.NullString
+type Entity struct {
+	FullName      sql.NullString `db:"fullname"`
+	Dep           sql.NullString `db:"dep"`
+	Bank          sql.NullString `db:"bank"`
+	Comment       sql.NullString `db:"comment"`
+	CommentSecond sql.NullString `db:"commentSecond"`
 }
 
 type DailyReportDTOReq struct {
@@ -18,7 +18,7 @@ type DailyReportDTOReq struct {
 	EndDate   string `json:"endDate,omitempty"`
 }
 
-type ManagerReportResp struct {
+type Response struct {
 	ManagerReport []CallReportMapped `json:"managerReport"`
 }
 
@@ -30,7 +30,7 @@ type CallReportMapped struct {
 	CommentSecond string
 }
 
-func (r *CallReport) ToCallReport() CallReportMapped {
+func (r *Entity) ToCallReport() CallReportMapped {
 	return CallReportMapped{
 		FullName:      StringOrEmpty(r.FullName),
 		Dep:           StringOrEmpty(r.Dep),
@@ -38,4 +38,19 @@ func (r *CallReport) ToCallReport() CallReportMapped {
 		Comment:       StringOrEmpty(r.Comment),
 		CommentSecond: StringOrEmpty(r.CommentSecond),
 	}
+}
+
+func ToResponse(entities []Entity) Response {
+	reports := make([]CallReportMapped, 0, len(entities))
+	for _, entity := range entities {
+		reports = append(reports, entity.ToCallReport())
+	}
+	return Response{ManagerReport: reports}
+}
+
+func StringOrEmpty(s sql.NullString) string {
+	if s.Valid {
+		return s.String
+	}
+	return ""
 }

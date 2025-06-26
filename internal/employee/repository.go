@@ -1,33 +1,30 @@
 package employee
 
 import (
-	"context"
-	"database/sql"
-	"fmt"
 	"github.com/jmoiron/sqlx"
-	"log"
 )
 
-type Store struct {
+type Repository struct {
 	db *sqlx.DB
 }
 
-func NewStore(db *sqlx.DB) *Store {
-	return &Store{db: db}
+func NewStore(db *sqlx.DB) *Repository {
+	return &Repository{db: db}
 }
 
-func (s *Store) FindByProducts(ctx context.Context, products []string) ([]EmployeeDTOResp, error) {
-	tx, err := s.db.BeginTxx(ctx, nil)
+func (r *Repository) BeginTransaction() (tx *sqlx.Tx, err error) {
+	return r.db.Beginx()
+}
+
+func (r *Repository) SetAnsiNullsOffTx(tx *sqlx.Tx) error {
+	_, err := tx.Exec("set ansi_nulls off\n")
 	if err != nil {
-		return nil, err
+		return err
 	}
-	defer func() {
-		_ = tx.Rollback()
-	}()
-	_, err = tx.ExecContext(ctx, "set ansi_nulls off\n")
-	if err != nil {
-		return nil, err
-	}
+	return nil
+}
+
+func (r *Repository) FindByProducts(tx *sqlx.Tx, products []string) (entity []Entity, err error) {
 	query, args, err := sqlx.In(` 
 		SELECT 
 	P794 as productName,
@@ -67,49 +64,8 @@ func (s *Store) FindByProducts(ctx context.Context, products []string) ([]Employ
 		return nil, err
 	}
 	query = tx.Rebind(query)
-	rows, err := tx.QueryContext(ctx, query, args...)
-	if err != nil {
+	if err = tx.Select(&entity, query, args...); err != nil {
 		return nil, err
 	}
-	defer func() {
-		err := rows.Close()
-		if err != nil {
-			log.Println(err)
-		}
-	}()
-	empl := make([]EmployeeDTOResp, 0)
-	for rows.Next() {
-		e, err := scanRowIntoProduct(rows)
-		if err != nil {
-			return nil, fmt.Errorf("error scanning row %v", err)
-		}
-		empl = append(empl, e)
-	}
-	defer func() {
-		err := rows.Close()
-		if err != nil {
-			log.Println(err)
-		}
-	}()
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	if err := tx.Commit(); err != nil {
-		return nil, err
-	}
-	return empl, nil
-
-}
-
-func scanRowIntoProduct(rows *sql.Rows) (EmployeeDTOResp, error) {
-	empl := EmployeeDTOResp{}
-	err := rows.Scan(
-		&empl.ProductName, &empl.ShortBankName, &empl.FullBankName, &empl.LastName, &empl.Name,
-		&empl.Patronymic, &empl.JobTitle, &empl.Email, &empl.ContactDate, &empl.Phone,
-		&empl.ExtensionPhone, &empl.Mobile,
-	)
-	if err != nil {
-		return EmployeeDTOResp{}, err
-	}
-	return empl, nil
+	return entity, nil
 }
