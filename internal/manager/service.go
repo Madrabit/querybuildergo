@@ -47,8 +47,11 @@ func (s *Service) GetDailyReport(manager, startDate, endDate string) (Response, 
 	}
 	report, err := s.repo.GetDailyReport(tx, manager, startDate, endDate)
 	if err != nil {
-		return Response{}, &common.NotFoundError{Massage: "manager service: get daily report: report not found"}
+		return Response{}, fmt.Errorf("manager service: get daily report: error: %w", err)
 	}
 	resp := ToResponse(report)
+	if len(report) == 0 {
+		return resp, &common.NotFoundError{Message: "manager service: get daily report: report not found"}
+	}
 	return resp, nil
 }

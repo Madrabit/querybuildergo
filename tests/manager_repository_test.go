@@ -21,7 +21,7 @@ func TestGetDailyReport(t *testing.T) {
 			log.Fatal("error closing db")
 		}
 	}()
-	store := manager.NewStore(db)
+	store := manager.NewRepository(db)
 	tx, err := store.BeginTransaction()
 	require.NoError(t, err)
 	report, err := store.GetDailyReport(tx, "Бартенева", "2024-11-08", "2024-11-09")

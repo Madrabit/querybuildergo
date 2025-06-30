@@ -2,16 +2,16 @@ package main
 
 import (
 	"fmt"
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/cors"
 	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
 	"log"
 	"net/http"
 	"querybuilder/internal/config"
 	"querybuilder/internal/database"
-	employee2 "querybuilder/internal/employee"
+	"querybuilder/internal/employee"
+	"querybuilder/internal/manager"
 	"querybuilder/internal/product"
+	"querybuilder/internal/web"
 )
 
 //goland:noinspection HttpUrlsUsage,HttpUrlsUsage
@@ -23,7 +23,6 @@ func main() {
 	if err != nil {
 		fmt.Println(err)
 	}
-
 	db, err := database.NewMssqlStorage(cnf.DB)
 	if err != nil {
 		log.Fatal(err)
@@ -34,43 +33,19 @@ func main() {
 			log.Fatal(err)
 		}
 	}(db)
-	repProduct := product.NewStore(db)
+	server := web.NewServer()
+	repProduct := product.NewRepository(db)
 	svcProd := product.NewService(repProduct)
-	handlerProd := product.NewHandler(svcProd)
-
-	//storeManager := NewStore(db)
-	//handlerManager := NewHandler(storeManager)
-
-	storeEmp := employee2.NewStore(db)
-	handlerEmp := employee2.NewHandler(storeEmp)
-
-	r := chi.NewRouter()
-	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins: []string{
-			"http://localhost:8080",
-			"http://192.168.102.217:4200",
-			"http://192.168.102.217:4201",
-			"http://qb.ibdarb.ru",
-			"http://members.ibdarb.ru",
-			"https://qb.ibdarb.ru",
-			"https://members.ibdarb.ru",
-			"https://core.ibdarb.ru",
-			"https://192.168.102.217:4200",
-		},
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Authorization", "Content-Type", "Accept", "X-CSRF-Token"},
-		AllowCredentials: true,
-		MaxAge:           3600,
-	}))
-	r.Route("/products", func(r chi.Router) {
-		r.Mount("/", product.Routes(handlerProd))
-	})
-	//r.Route("/manager", func(r chi.Router) {
-	//	r.Mount("/", manager2.Routes(handlerManager))
-	//})
-	r.Route("/employee", func(r chi.Router) {
-		r.Mount("/", employee2.Routes(handlerEmp))
-	})
-	log.Fatal(http.ListenAndServe(":8080", r))
-
+	controllerProduct := product.NewController(server, svcProd)
+	controllerProduct.RegisterRoutes()
+	repoManager := manager.NewRepository(db)
+	serviceManager := manager.NewService(repoManager)
+	controllerManager := manager.NewController(server, serviceManager)
+	controllerManager.RegisterRoutes()
+	repoEmployee := employee.NewRepository(db)
+	generator := employee.NewGenerator()
+	serviceEmployee := employee.NewService(repoEmployee, generator)
+	controllerEmployee := employee.NewController(server, serviceEmployee)
+	controllerEmployee.RegisterRoutes()
+	log.Fatal(http.ListenAndServe(":8080", server.R))
 }

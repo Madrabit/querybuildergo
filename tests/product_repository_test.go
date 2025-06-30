@@ -23,7 +23,7 @@ func TestGetAllProducts(t *testing.T) {
 		}
 	}(db)
 	require.NoError(t, err)
-	store := product.NewStore(db)
+	store := product.NewRepository(db)
 	tx, err := store.BeginTransaction()
 	require.NoError(t, err)
 	products, err := store.GetAllProductsTx(tx)

@@ -17,9 +17,9 @@ func (err *AlreadyExistsError) Error() string {
 }
 
 type NotFoundError struct {
-	Massage string
+	Message string
 }
 
 func (err *NotFoundError) Error() string {
-	return err.Massage
+	return err.Message
 }

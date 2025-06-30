@@ -6,9 +6,9 @@ import (
 )
 
 type Response[T any] struct {
-	Success bool   `json:"success"`
-	Message string `json:"error"`
-	Data    T      `json:"data"`
+	Success bool    `json:"success"`
+	Message *string `json:"message,omitempty"`
+	Data    T       `json:"data"`
 }
 
 func ErrResponse(w http.ResponseWriter, code int, msg string) {
@@ -16,17 +16,25 @@ func ErrResponse(w http.ResponseWriter, code int, msg string) {
 	w.WriteHeader(code)
 	_ = json.NewEncoder(w).Encode(Response[any]{
 		Success: false,
-		Message: msg,
+		Message: &msg,
 		Data:    nil,
 	})
 }
 
-func OkResponse[T any](w http.ResponseWriter, data T) {
+func okResponseInternal[T any](w http.ResponseWriter, data T, msg *string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(Response[any]{
 		Success: true,
-		Message: "",
+		Message: msg,
 		Data:    data,
 	})
+}
+
+func OkResponse[T any](w http.ResponseWriter, data T) {
+	okResponseInternal(w, data, nil)
+}
+
+func OkResponseMsg[T any](w http.ResponseWriter, data T, msg string) {
+	okResponseInternal(w, data, &msg)
 }

@@ -47,7 +47,7 @@ func (s *Service) GetAllProducts() (products Response, err error) {
 	}
 	prod, err := s.repo.GetAllProductsTx(tx)
 	if err != nil {
-		return Response{}, &common.NotFoundError{Massage: "product service: get all products: products not found"}
+		return Response{}, &common.NotFoundError{Message: "product service: get all products: products not found"}
 	}
 	products = ToResponse(prod)
 	return products, nil

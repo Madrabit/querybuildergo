@@ -8,6 +8,7 @@ import (
 
 type Service struct {
 	repo Repo
+	gen  FileGenerator
 }
 
 type Repo interface {
@@ -16,14 +17,18 @@ type Repo interface {
 	SetAnsiNullsOffTx(tx *sqlx.Tx) error
 }
 
-func NewService(repo Repo) *Service {
-	return &Service{repo}
+type FileGenerator interface {
+	CreateExl(empls []Entity) ([]byte, error)
 }
 
-func (s *Service) FindByProducts() (products Response, err error) {
+func NewService(repo Repo, gen FileGenerator) *Service {
+	return &Service{repo, gen}
+}
+
+func (s *Service) FindByProducts(products []string) (file []byte, err error) {
 	tx, err := s.repo.BeginTransaction()
 	if err != nil {
-		return Response{}, fmt.Errorf("employee service: find by products: error starting transaction")
+		return nil, fmt.Errorf("employee service: find by products: error starting transaction")
 	}
 	defer func() {
 		if p := recover(); p != nil {
@@ -43,12 +48,15 @@ func (s *Service) FindByProducts() (products Response, err error) {
 	}()
 	err = s.repo.SetAnsiNullsOffTx(tx)
 	if err != nil {
-		return Response{}, fmt.Errorf("employee service: find by products:  error set ansi null off: %w", err)
+		return nil, fmt.Errorf("employee service: find by products:  error set ansi null off: %w", err)
 	}
-	prod, err := s.repo.GetAllProductsTx(tx)
+	prod, err := s.repo.FindByProducts(tx, products)
 	if err != nil {
-		return Response{}, &common.NotFoundError{Massage: "employee service: find by products: employees not found"}
+		return nil, &common.NotFoundError{Message: "employee service: find by products: employees not found"}
 	}
-	products = ToResponse(prod)
-	return products, nil
+	exl, err := s.gen.CreateExl(prod)
+	if err != nil {
+		return nil, fmt.Errorf("employee service: find by products: error creating exl: %w", err)
+	}
+	return exl, nil
 }

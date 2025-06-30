@@ -8,7 +8,7 @@ type Repository struct {
 	db *sqlx.DB
 }
 
-func NewStore(db *sqlx.DB) *Repository {
+func NewRepository(db *sqlx.DB) *Repository {
 	return &Repository{db: db}
 }
 

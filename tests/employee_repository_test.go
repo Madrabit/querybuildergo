@@ -21,7 +21,7 @@ func TestGetEmplByProducts(t *testing.T) {
 			log.Fatal("error closing db")
 		}
 	}()
-	store := employee.NewStore(db)
+	store := employee.NewRepository(db)
 	tx, err := store.BeginTransaction()
 	require.NoError(t, err)
 	products := []string{"IRB-моделирование для профессионалов"}
