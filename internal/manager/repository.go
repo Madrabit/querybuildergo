@@ -23,7 +23,7 @@ func (r *Repository) BeginTransaction() (tx *sqlx.Tx, err error) {
 	return r.db.Beginx()
 }
 
-func (s *Repository) GetDailyReport(tx *sqlx.Tx, manager, startDate, endDate string) (report []Entity, err error) {
+func (r *Repository) GetDailyReport(tx *sqlx.Tx, manager, startDate, endDate string) (report []Entity, err error) {
 	query := `
 		SELECT 
 			a.P1972 + ' ' + a.P1973 + ' ' + a.P1974 as fullname, P2835 as dep, P2599 as comment,P3290 as commentSecond, P18 as bank

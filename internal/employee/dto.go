@@ -2,7 +2,7 @@ package employee
 
 import "database/sql"
 
-type EmployeeClean struct {
+type Response struct {
 	ProductName    string
 	ShortBankName  string
 	FullBankName   string
@@ -36,8 +36,8 @@ type Entity struct {
 	Mobile         sql.NullString `db:"mobile"`
 }
 
-func (e Entity) ToCallReport() EmployeeClean {
-	return EmployeeClean{
+func (e Entity) ToCallReport() Response {
+	return Response{
 		ProductName:    StringOrEmpty(e.ProductName),
 		ShortBankName:  StringOrEmpty(e.ShortBankName),
 		FullBankName:   StringOrEmpty(e.FullBankName),

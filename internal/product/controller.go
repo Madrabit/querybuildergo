@@ -29,7 +29,7 @@ func (c *Controller) RegisterRoutes() {
 	})
 }
 
-func (c *Controller) GetProducts(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) GetProducts(w http.ResponseWriter, _ *http.Request) {
 	products, err := c.svc.GetAllProducts()
 	var nfErr *common.NotFoundError
 	if err != nil {

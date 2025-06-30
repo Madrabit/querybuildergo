@@ -9,6 +9,7 @@ type Server struct {
 	R *chi.Mux
 }
 
+//goland:noinspection HttpUrlsUsage,HttpUrlsUsage
 func registerMiddleware(r *chi.Mux) {
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins: []string{

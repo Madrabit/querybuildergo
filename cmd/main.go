@@ -14,7 +14,6 @@ import (
 	"querybuilder/internal/web"
 )
 
-//goland:noinspection HttpUrlsUsage,HttpUrlsUsage
 func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Fatal("Error loading .env file")
