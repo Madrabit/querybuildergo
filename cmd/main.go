@@ -1,9 +1,11 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
+	gracefulshutdown "github.com/quii/go-graceful-shutdown"
 	"log"
 	"net/http"
 	"querybuilder/internal/config"
@@ -32,6 +34,17 @@ func main() {
 			log.Fatal(err)
 		}
 	}(db)
+	server := build(db)
+	httpServer := &http.Server{Addr: ":8080", Handler: server.R}
+	ctx := context.Background()
+	srv := gracefulshutdown.NewServer(httpServer)
+	if err := srv.ListenAndServe(ctx); err != nil {
+		log.Fatalf("didnt shutdown gracefully, some responses may have been lost %v", err)
+	}
+	log.Println("shutdown gracefully! all responses were sent")
+}
+
+func build(db *sqlx.DB) *web.Server {
 	server := web.NewServer()
 	repProduct := product.NewRepository(db)
 	svcProd := product.NewService(repProduct)
@@ -46,5 +59,5 @@ func main() {
 	serviceEmployee := employee.NewService(repoEmployee, generator)
 	controllerEmployee := employee.NewController(server, serviceEmployee)
 	controllerEmployee.RegisterRoutes()
-	log.Fatal(http.ListenAndServe(":8080", server.R))
+	return server
 }
