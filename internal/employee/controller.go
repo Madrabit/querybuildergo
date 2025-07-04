@@ -4,18 +4,21 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/go-chi/chi/v5"
+	"go.uber.org/zap"
 	"log"
 	"net/http"
+	"querybuilder/internal/common"
 	"querybuilder/internal/web"
 )
 
 type Controller struct {
 	svc    Svc
 	server *web.Server
+	logger *common.Logger
 }
 
-func NewController(server *web.Server, svc Svc) *Controller {
-	return &Controller{server: server, svc: svc}
+func NewController(server *web.Server, svc Svc, logger *common.Logger) *Controller {
+	return &Controller{server: server, svc: svc, logger: logger}
 }
 
 type Svc interface {
@@ -29,13 +32,16 @@ func (c *Controller) RegisterRoutes() {
 }
 
 func (c *Controller) getFileByProducts(w http.ResponseWriter, r *http.Request) {
-	var prodReq ProductsReq
-	if err := json.NewDecoder(r.Body).Decode(&prodReq); err != nil {
+	var request ProductsReq
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		c.logger.Error("failed to get employees", zap.Error(err))
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	products, err := c.svc.FindByProducts(prodReq.Products)
+	c.logger.Debug("get employees: received request", zap.Any("request", request))
+	products, err := c.svc.FindByProducts(request.Products)
 	if err != nil {
+		c.logger.Error("failed to get employees", zap.Error(err))
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -45,6 +51,8 @@ func (c *Controller) getFileByProducts(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Length", fmt.Sprintf("%d", len(products)))
 	w.WriteHeader(http.StatusOK)
 	if _, err := w.Write(products); err != nil {
+		c.logger.Error("failed to write response", zap.Error(err))
 		log.Printf("failed to write response: %v", err)
 	}
+	c.logger.Info("successfully retrieve employees list")
 }

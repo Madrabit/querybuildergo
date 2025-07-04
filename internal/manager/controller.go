@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/go-chi/chi/v5"
+	"go.uber.org/zap"
 	"net/http"
 	"querybuilder/internal/common"
 	"querybuilder/internal/web"
@@ -12,10 +13,11 @@ import (
 type Controller struct {
 	server *web.Server
 	svc    Svc
+	logger *common.Logger
 }
 
-func NewController(server *web.Server, svc Svc) *Controller {
-	return &Controller{server: server, svc: svc}
+func NewController(server *web.Server, svc Svc, logger *common.Logger) *Controller {
+	return &Controller{server: server, svc: svc, logger: logger}
 }
 
 type Svc interface {
@@ -29,18 +31,21 @@ func (c *Controller) RegisterRoutes() {
 }
 
 func (c *Controller) GetDailyReport(w http.ResponseWriter, r *http.Request) {
-	var report DailyReportDTOReq
-	if err := json.NewDecoder(r.Body).Decode(&report); err != nil {
+	var request DailyReportDTOReq
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	dailyReport, err := c.svc.GetDailyReport(report.Manager, report.StartDate, report.EndDate)
+	c.logger.Debug("get daily request: received request", zap.Any("request", request))
+	dailyReport, err := c.svc.GetDailyReport(request.Manager, request.StartDate, request.EndDate)
 	var reqErr *common.RequestValidationError
 	var notFoundErr *common.NotFoundError
 	if err != nil {
+		c.logger.Error("failed to get daily request", zap.Error(err))
 		switch {
 		case errors.As(err, &notFoundErr):
-			common.OkResponseMsg(w, dailyReport, "controller manager: get daily report: report not found")
+			c.logger.Error("daily request not found", zap.Error(err))
+			common.OkResponseMsg(w, dailyReport, "controller manager: get daily request: request not found")
 			return
 		case errors.As(err, &reqErr):
 			common.ErrResponse(w, http.StatusBadRequest, err.Error())
@@ -50,5 +55,6 @@ func (c *Controller) GetDailyReport(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+	c.logger.Info("successfully retrieve daily request")
 	common.OkResponse(w, dailyReport)
 }

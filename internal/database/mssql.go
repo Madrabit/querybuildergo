@@ -4,10 +4,10 @@ import (
 	"fmt"
 	_ "github.com/denisenkom/go-mssqldb"
 	"github.com/jmoiron/sqlx"
-	"querybuilder/internal/config"
+	"querybuilder/internal/common"
 )
 
-func NewMssqlStorage(cnf config.DBConfig) (*sqlx.DB, error) {
+func NewMssqlStorage(cnf common.DBConfig) (*sqlx.DB, error) {
 	connString := fmt.Sprintf("server=%s;port=%d;user id=%s;password=%s;database=%s;encrypt=disable",
 		cnf.Server, cnf.Port, cnf.User, cnf.Pass, cnf.Database)
 	db, err := sqlx.Open("mssql", connString)

@@ -5,14 +5,14 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/require"
 	"log"
-	"querybuilder/internal/config"
+	"querybuilder/internal/common"
 	"querybuilder/internal/database"
 	"querybuilder/internal/product"
 	"testing"
 )
 
 func TestGetAllProducts(t *testing.T) {
-	cnf, err := config.Load()
+	cnf, err := common.Load()
 	require.NoError(t, err)
 	db, err := database.NewMssqlStorage(cnf.DB)
 	require.NoError(t, err)

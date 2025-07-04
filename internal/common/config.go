@@ -1,12 +1,15 @@
-package config
+package common
 
 import (
 	"github.com/kelseyhightower/envconfig"
+	"os"
 )
 
 type Config struct {
-	DB     DBConfig
-	Server ServerConfig
+	DB             DBConfig
+	Server         ServerConfig
+	LogLevel       string
+	LogDevelopMode bool
 }
 
 type DBConfig struct {
@@ -23,7 +26,10 @@ type ServerConfig struct {
 }
 
 func Load() (Config, error) {
-	var cfg Config
+	var cfg Config = Config{
+		LogLevel:       os.Getenv("LOG_LEVEL"),
+		LogDevelopMode: os.Getenv("LOG_DEVELOP_MODE") == "true",
+	}
 	if db, err := LoadDbConfig(); err != nil {
 		return Config{}, err
 	} else {

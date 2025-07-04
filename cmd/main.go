@@ -8,7 +8,7 @@ import (
 	gracefulshutdown "github.com/quii/go-graceful-shutdown"
 	"log"
 	"net/http"
-	"querybuilder/internal/config"
+	"querybuilder/internal/common"
 	"querybuilder/internal/database"
 	"querybuilder/internal/employee"
 	"querybuilder/internal/manager"
@@ -20,28 +20,30 @@ func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Fatal("Error loading .env file")
 	}
-	cnf, err := config.Load()
+	cnf, err := common.Load()
 	if err != nil {
 		fmt.Println(err)
 	}
+	logger := common.NewLogger(cnf)
+	defer func() { _ = logger.Sync() }()
 	db, err := database.NewMssqlStorage(cnf.DB)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer func(db *sqlx.DB) {
+	defer func() {
 		err := db.Close()
 		if err != nil {
 			log.Fatal(err)
 		}
-	}(db)
+	}()
 	server := build(db)
 	httpServer := &http.Server{Addr: ":8080", Handler: server.R}
 	ctx := context.Background()
 	srv := gracefulshutdown.NewServer(httpServer)
 	if err := srv.ListenAndServe(ctx); err != nil {
-		log.Fatalf("didnt shutdown gracefully, some responses may have been lost %v", err)
+		logger.Fatal("didnt shutdown gracefully, some responses may have been lost")
 	}
-	log.Println("shutdown gracefully! all responses were sent")
+	logger.Info("shutdown gracefully! all responses were sent")
 }
 
 func build(db *sqlx.DB) *web.Server {

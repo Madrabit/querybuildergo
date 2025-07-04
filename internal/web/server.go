@@ -2,6 +2,7 @@ package web
 
 import (
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 )
 
@@ -28,6 +29,8 @@ func registerMiddleware(r *chi.Mux) {
 		AllowCredentials: true,
 		MaxAge:           3600,
 	}))
+	r.Use(middleware.Recoverer)
+	r.Use(middleware.RequestID)
 }
 
 func NewServer() *Server {
