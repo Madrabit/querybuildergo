@@ -12,7 +12,7 @@ type Entity struct {
 	CommentSecond sql.NullString `db:"commentSecond"`
 }
 
-type DailyReportDTOReq struct {
+type DailyReportReq struct {
 	Manager   string `json:"manager,omitempty"`
 	StartDate string `json:"startDate,omitempty"`
 	EndDate   string `json:"endDate,omitempty"`

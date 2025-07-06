@@ -7,8 +7,9 @@ import (
 )
 
 type Service struct {
-	repo Repo
-	gen  FileGenerator
+	repo      Repo
+	gen       FileGenerator
+	validator Validator
 }
 
 type Repo interface {
@@ -21,11 +22,18 @@ type FileGenerator interface {
 	CreateExl(empls []Entity) ([]byte, error)
 }
 
-func NewService(repo Repo, gen FileGenerator) *Service {
-	return &Service{repo, gen}
+type Validator interface {
+	Validate(request any) error
+}
+
+func NewService(repo Repo, gen FileGenerator, validator Validator) *Service {
+	return &Service{repo, gen, validator}
 }
 
 func (s *Service) FindByProducts(products []string) (file []byte, err error) {
+	if err = s.validator.Validate(products); err != nil {
+		return []byte{}, &common.RequestValidationError{Massage: err.Error()}
+	}
 	tx, err := s.repo.BeginTransaction()
 	if err != nil {
 		return nil, fmt.Errorf("employee service: find by products: error starting transaction")

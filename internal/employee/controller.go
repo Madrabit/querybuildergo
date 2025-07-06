@@ -31,6 +31,16 @@ func (c *Controller) RegisterRoutes() {
 	})
 }
 
+// getFileByProducts godoc
+// @Summary      Получить Excel-файл по продуктам
+// @Description  Возвращает Excel-файл с данными по списку продуктов
+// @Tags         employees
+// @Accept       json
+// @Produce      application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+// @Param        request body ProductsReq true "Список продуктов"
+// @Success      200 {file} file "Файл с данными"
+// @Failure      400 {string} string "bad request"
+// @Router       /employee/download [post]
 func (c *Controller) getFileByProducts(w http.ResponseWriter, r *http.Request) {
 	var request ProductsReq
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {

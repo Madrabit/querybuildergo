@@ -21,7 +21,7 @@ func NewController(server *web.Server, svc Svc, logger *common.Logger) *Controll
 }
 
 type Svc interface {
-	GetDailyReport(manager, startDate, endDate string) (Response, error)
+	GetDailyReport(request DailyReportReq) (Response, error)
 }
 
 func (c *Controller) RegisterRoutes() {
@@ -30,14 +30,25 @@ func (c *Controller) RegisterRoutes() {
 	})
 }
 
+// GetDailyReport godoc
+// @Summary      Получить ежедневный отчет
+// @Description  Возвращает отчет по переданным параметрам из тела запроса
+// @Tags         managers
+// @Accept       json
+// @Produce      json
+// @Param        request body DailyReportReq true "Параметры для отчета"
+// @Success      200 {object} Response "Отчет успешно получен"
+// @Failure      400 {string} string "Некорректный запрос"
+// @Failure      500 {string} string "Внутренняя ошибка"
+// @Router       /managers/ [post]
 func (c *Controller) GetDailyReport(w http.ResponseWriter, r *http.Request) {
-	var request DailyReportDTOReq
+	var request DailyReportReq
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	c.logger.Debug("get daily request: received request", zap.Any("request", request))
-	dailyReport, err := c.svc.GetDailyReport(request.Manager, request.StartDate, request.EndDate)
+	dailyReport, err := c.svc.GetDailyReport(request)
 	var reqErr *common.RequestValidationError
 	var notFoundErr *common.NotFoundError
 	if err != nil {

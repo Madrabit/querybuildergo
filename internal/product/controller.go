@@ -33,6 +33,14 @@ func (c *Controller) RegisterRoutes() {
 	})
 }
 
+// GetProducts godoc
+// @Summary      Получить список продуктов
+// @Description  Возвращает полный список доступных продуктов
+// @Tags         products
+// @Produce      json
+// @Success      200 {array} Response "Список продуктов"
+// @Failure      500 {string} string "Внутренняя ошибка сервера"
+// @Router       /products/ [get]
 func (c *Controller) GetProducts(w http.ResponseWriter, _ *http.Request) {
 	products, err := c.svc.GetAllProducts()
 	var nfErr *common.NotFoundError

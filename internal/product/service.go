@@ -7,7 +7,8 @@ import (
 )
 
 type Service struct {
-	repo Repo
+	repo      Repo
+	validator Validator
 }
 
 type Repo interface {
@@ -16,8 +17,12 @@ type Repo interface {
 	SetAnsiNullsOffTx(tx *sqlx.Tx) error
 }
 
-func NewService(repo Repo) *Service {
-	return &Service{repo: repo}
+func NewService(repo Repo, validator Validator) *Service {
+	return &Service{repo: repo, validator: validator}
+}
+
+type Validator interface {
+	Validate(request any) error
 }
 
 func (s *Service) GetAllProducts() (products Response, err error) {

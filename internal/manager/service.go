@@ -7,7 +7,8 @@ import (
 )
 
 type Service struct {
-	repo Repo
+	repo      Repo
+	validator Validator
 }
 
 type Repo interface {
@@ -16,11 +17,18 @@ type Repo interface {
 	SetAnsiNullsOffTx(tx *sqlx.Tx) error
 }
 
-func NewService(repo Repo) *Service {
-	return &Service{repo: repo}
+func NewService(repo Repo, validator Validator) *Service {
+	return &Service{repo: repo, validator: validator}
 }
 
-func (s *Service) GetDailyReport(manager, startDate, endDate string) (Response, error) {
+type Validator interface {
+	Validate(request any) error
+}
+
+func (s *Service) GetDailyReport(request DailyReportReq) (Response, error) {
+	if err := s.validator.Validate(request); err != nil {
+		return Response{}, &common.RequestValidationError{Massage: err.Error()}
+	}
 	tx, err := s.repo.BeginTransaction()
 	if err != nil {
 		return Response{}, fmt.Errorf("manager service: get daily report: error starting transaction")
@@ -45,7 +53,7 @@ func (s *Service) GetDailyReport(manager, startDate, endDate string) (Response, 
 	if err != nil {
 		return Response{}, fmt.Errorf("manager service: get daily report: error set ansi null off: %w", err)
 	}
-	report, err := s.repo.GetDailyReport(tx, manager, startDate, endDate)
+	report, err := s.repo.GetDailyReport(tx, request.Manager, request.StartDate, request.EndDate)
 	if err != nil {
 		return Response{}, fmt.Errorf("manager service: get daily report: error: %w", err)
 	}

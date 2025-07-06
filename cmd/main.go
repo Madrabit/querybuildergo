@@ -13,9 +13,16 @@ import (
 	"querybuilder/internal/employee"
 	"querybuilder/internal/manager"
 	"querybuilder/internal/product"
+	"querybuilder/internal/validator"
 	"querybuilder/internal/web"
 )
 
+// @title Query Builder API
+// @version 1.0
+// @description App for building queries
+
+// @host localhost:8080
+// @BasePath /
 func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Fatal("Error loading .env file")
@@ -36,7 +43,7 @@ func main() {
 			log.Fatal(err)
 		}
 	}()
-	server := build(db)
+	server := build(db, logger)
 	httpServer := &http.Server{Addr: ":8080", Handler: server.R}
 	ctx := context.Background()
 	srv := gracefulshutdown.NewServer(httpServer)
@@ -46,20 +53,21 @@ func main() {
 	logger.Info("shutdown gracefully! all responses were sent")
 }
 
-func build(db *sqlx.DB) *web.Server {
+func build(db *sqlx.DB, logger *common.Logger) *web.Server {
 	server := web.NewServer()
+	vld := validator.New()
 	repProduct := product.NewRepository(db)
-	svcProd := product.NewService(repProduct)
-	controllerProduct := product.NewController(server, svcProd)
+	svcProd := product.NewService(repProduct, vld)
+	controllerProduct := product.NewController(server, svcProd, logger)
 	controllerProduct.RegisterRoutes()
 	repoManager := manager.NewRepository(db)
-	serviceManager := manager.NewService(repoManager)
-	controllerManager := manager.NewController(server, serviceManager)
+	serviceManager := manager.NewService(repoManager, vld)
+	controllerManager := manager.NewController(server, serviceManager, logger)
 	controllerManager.RegisterRoutes()
 	repoEmployee := employee.NewRepository(db)
 	generator := employee.NewGenerator()
-	serviceEmployee := employee.NewService(repoEmployee, generator)
-	controllerEmployee := employee.NewController(server, serviceEmployee)
+	serviceEmployee := employee.NewService(repoEmployee, generator, vld)
+	controllerEmployee := employee.NewController(server, serviceEmployee, logger)
 	controllerEmployee.RegisterRoutes()
 	return server
 }
